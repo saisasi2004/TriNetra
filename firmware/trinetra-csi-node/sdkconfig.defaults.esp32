@@ -1,0 +1,31 @@
+# ── ESP32 classic (WROOM-32 / DevKit V1 38-pin) overlay ─────────────────
+# Applied automatically on top of sdkconfig.defaults when the target is
+# esp32 (`idf.py set-target esp32`).
+#
+# The classic ESP32 gives the same CSI as an S3: HT-LTF, 64 bins, 56 active
+# subcarriers. Nothing about the sensing changes — only the toolchain target
+# and a few board-level details below.
+
+# Xtensa LX6 dual core, 240 MHz — same as the S3 for our purposes.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=240
+
+# WROOM-32 has no USB-Serial-JTAG peripheral; the DevKit board uses an
+# external CP2102 or CH340 bridge, so the console is plain UART0.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+
+# Stock WROOM-32 modules ship 4 MB of flash. partitions.csv is sized to end
+# at exactly 0x400000, so it fits without modification.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# No PSRAM on a plain WROOM-32 (that is the WROVER). The firmware uses
+# static buffers only — the CSI queue is ~37 KB, comfortable in the 520 KB
+# of internal SRAM — so nothing here needs external RAM.
+# CONFIG_SPIRAM is not set
+
+# Many DevKit V1 clones have a marginal auto-reset circuit. A slower flash
+# speed is far more reliable on them and costs a few seconds once.
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_40M=y

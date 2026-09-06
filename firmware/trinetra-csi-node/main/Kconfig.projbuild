@@ -1,0 +1,57 @@
+menu "TriNetra Node Configuration"
+
+    config TN_FIRMWARE_VERSION
+        string "Firmware version string"
+        default "1.0.0"
+
+    config TN_DEFAULT_SSID
+        string "Default WiFi SSID"
+        default ""
+        help
+            Fallback SSID, used only when NVS holds no provisioned config.
+            Leave EMPTY here and provision over serial instead.
+
+            Anything set here is compiled into every binary built from this
+            tree and is readable straight back out with `strings`. For a
+            throwaway bench setup you may set it locally — sdkconfig is
+            gitignored — but never commit it.
+
+    config TN_DEFAULT_PASSWORD
+        string "Default WiFi password"
+        default ""
+        help
+            Leave EMPTY. Use provision.py, which writes credentials to NVS
+            over the serial console so they never enter the source tree or
+            the firmware image.
+
+    config TN_DEFAULT_TARGET_IP
+        string "Default sensing server IP"
+        default "192.168.1.20"
+        help
+            Where the node sends CSI. This MUST be the machine running
+            `npm run live`, on the same subnet the node joins.
+
+            A wrong value here fails silently in the most confusing way
+            possible: the node associates, the LED behaves, the console
+            reports "online", and it streams UDP to an address that does not
+            exist. UDP is unacknowledged, so nothing anywhere reports an
+            error — the server simply shows no nodes.
+
+            Note this is a DHCP address and can change when the server
+            reboots. Give that machine a static lease on the router if the
+            nodes start going quiet for no reason.
+
+    config TN_DEFAULT_TARGET_PORT
+        int "Default sensing server UDP port"
+        default 5005
+        range 1 65535
+
+    config TN_DEFAULT_NODE_ID
+        int "Default node ID"
+        default 1
+        range 1 254
+        help
+            Unique per node within a deployment. The server keys all
+            per-node state on this value.
+
+endmenu

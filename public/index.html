@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080c14">
+  <meta name="description" content="TriNetra - presence, vital signs and falls from ordinary WiFi. No cameras, no wearables.">
+  <title>TriNetra Observatory</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="/css/observatory.css">
+</head>
+<body>
+
+<div id="loading">
+  <div class="inner">
+    <div class="mark"><i class="bx bx-broadcast"></i></div>
+    <div class="txt">TriNetra initialising</div>
+  </div>
+</div>
+
+<canvas id="scene-canvas"></canvas>
+<div id="vignette"></div>
+
+<div id="hud">
+
+  <div id="brand">
+    <div id="brand-logo"><i class="bx bx-broadcast mark"></i>TriNetra</div>
+    <div id="brand-tagline">WiFi Sensing Observatory</div>
+  </div>
+
+  <div id="node-strip"></div>
+
+  <div id="status-bar">
+    <div class="pill" id="source-pill">
+      <span class="dot dot--offline" id="source-dot"></span>
+      <span id="source-label">CONNECTING</span>
+    </div>
+
+    <div class="pill pill--amber" id="scenario-pill">
+      <select id="scenario-select" title="Simulator scenario"></select>
+    </div>
+
+    <a class="icon-btn" href="/planner.html" title="Floor plan editor"><i class="bx bx-shape-square"></i></a>
+    <a class="icon-btn" href="/dashboard.html" title="Dashboard"><i class="bx bxs-dashboard"></i></a>
+    <button class="icon-btn" id="btn-settings" title="Settings (S)"><i class="bx bxs-cog"></i></button>
+  </div>
+
+  <div id="alert-banner"></div>
+
+  <!-- Vitals -->
+  <section class="panel" id="panel-vitals">
+    <div class="panel-title"><span>Vital Signs</span><span id="vitals-quality"></span></div>
+
+    <div class="vital">
+      <div class="vital-icon hr"><i class="bx bxs-heart"></i></div>
+      <div class="vital-body">
+        <div class="vital-label">Heart Rate</div>
+        <div class="vital-value stale" id="hr-value">--<span class="unit">BPM</span></div>
+        <div class="bar bar--hr"><i id="hr-bar"></i></div>
+      </div>
+    </div>
+
+    <div class="vital">
+      <div class="vital-icon br"><i class="bx bx-wind"></i></div>
+      <div class="vital-body">
+        <div class="vital-label">Respiration</div>
+        <div class="vital-value stale" id="br-value">--<span class="unit">RPM</span></div>
+        <div class="bar bar--br"><i id="br-bar"></i></div>
+      </div>
+    </div>
+
+    <div class="vital">
+      <div class="vital-icon cf"><i class="bx bx-target-lock"></i></div>
+      <div class="vital-body">
+        <div class="vital-label">Confidence</div>
+        <div class="vital-value stale" id="conf-value">--<span class="unit">%</span></div>
+        <div class="bar bar--cf"><i id="conf-bar"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Signal -->
+  <section class="panel" id="panel-signal">
+    <div class="panel-title"><span>WiFi Signal</span><span id="signal-verdict"></span></div>
+
+    <div class="row"><span class="k">RSSI</span><span class="v" id="rssi-value">-- dBm</span></div>
+    <div class="row"><span class="k">Variance</span><span class="v" id="var-value">--</span></div>
+    <div class="row"><span class="k">Motion</span><span class="v" id="motion-value">--</span></div>
+    <div class="row"><span class="k">Dominant</span><span class="v" id="freq-value">-- Hz</span></div>
+    <div class="row">
+      <span class="k">Persons</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span class="v" id="persons-value">0</span>
+        <span class="person-dots" id="person-dots"></span>
+      </span>
+    </div>
+
+    <canvas id="sparkline"></canvas>
+
+    <div class="presence-state presence--absent" id="presence-state">ABSENT</div>
+    <div class="note" id="presence-reason" style="text-align:center;margin-top:5px"></div>
+  </section>
+
+  <!-- Semantic states -->
+  <section class="panel" id="panel-states">
+    <div class="panel-title"><span>Detected States</span><span id="states-count"></span></div>
+    <div id="states-list"><div class="states-empty">Nothing detected</div></div>
+  </section>
+
+  <!-- One row, two groups. They used to be independently positioned — one
+       centred, one right-anchored — which meant nothing stopped them
+       overlapping as the window narrowed, and "Fall Detection" ran straight
+       through "W walls". A grid row cannot overlap itself. -->
+  <div id="bottom-bar">
+    <div id="capabilities">
+      <span class="cap" id="cap-presence"><i class="bx bx-radio-circle"></i><span>Presence</span></span>
+      <span class="sep"></span>
+      <span class="cap" id="cap-vitals"><i class="bx bx-radio-circle"></i><span>Vital Signs</span></span>
+      <span class="sep"></span>
+      <span class="cap" id="cap-tracking"><i class="bx bx-radio-circle"></i><span>Tracking</span></span>
+      <span class="sep"></span>
+      <span class="cap" id="cap-fall"><i class="bx bx-radio-circle"></i><span>Fall Detection</span></span>
+    </div>
+
+    <div id="key-hints">
+      <span><kbd>A</kbd>orbit</span>
+      <span><kbd>W</kbd>walls</span>
+      <span><kbd>L</kbd>labels</span>
+      <span><kbd>P</kbd>plan 2D</span>
+      <span><kbd>H</kbd>height</span>
+      <span><kbd>F</kbd>field</span>
+      <span><kbd>K</kbd>skeleton</span>
+      <span><kbd>S</kbd>settings</span>
+    </div>
+  </div>
+
+  <div id="quality-strip">
+    <span id="quality-left">
+      <span class="flag flag--nodata" id="quality-flag">NO DATA</span>
+      <span id="quality-detail" style="margin-left:10px"></span>
+    </span>
+    <span id="quality-right"></span>
+  </div>
+</div>
+
+<!-- Settings drawer -->
+<aside id="settings">
+  <div class="settings-head">
+    <h2>Settings</h2>
+    <button class="icon-btn" id="btn-close-settings"><i class="bx bx-x"></i></button>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-building-house"></i> Floor Plan</h3>
+    <label class="setting"><span>Plan view (2D)</span><input type="checkbox" id="opt-plan"></label>
+    <label class="setting"><span>Walls</span><input type="checkbox" id="opt-room" checked></label>
+    <label class="setting"><span>Room labels</span><input type="checkbox" id="opt-labels" checked></label>
+    <label class="setting"><span>Wall height</span><input type="range" id="opt-wall-h" min="0.3" max="3.05" step="0.05" value="1.15"><span class="val" id="v-wall-h">1.15</span></label>
+    <label class="setting"><span>Sensor nodes</span><input type="checkbox" id="opt-nodes" checked></label>
+    <label class="setting"><span>Light level</span><input type="range" id="opt-light" min="0" max="1.5" step="0.05" value="0.75"><span class="val" id="v-light">0.75</span></label>
+    <label class="setting"><span>Shadows</span><input type="checkbox" id="opt-shadows" checked></label>
+    <p class="note">
+      Walls default to model height so every room stays visible from above.
+      Slide to 3.05 m for full-height walls - realistic, but rooms become
+      blind boxes unless you fly the camera inside.
+    </p>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-camera-movie"></i> Camera</h3>
+    <label class="setting"><span>Auto-orbit</span><input type="checkbox" id="opt-orbit" checked></label>
+    <label class="setting"><span>Orbit speed</span><input type="range" id="opt-orbit-speed" min="0.02" max="0.5" step="0.02" value="0.10"><span class="val" id="v-orbit-speed">0.10</span></label>
+    <label class="setting"><span>Field of view</span><input type="range" id="opt-fov" min="30" max="90" step="1" value="50"><span class="val" id="v-fov">50</span></label>
+    <label class="setting"><span>WiFi waves</span><input type="range" id="opt-waves" min="0" max="1" step="0.05" value="0.5"><span class="val" id="v-waves">0.50</span></label>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-pulse"></i> Signal Field</h3>
+    <label class="setting"><span>Field opacity</span><input type="range" id="opt-field" min="0" max="1" step="0.05" value="0.7"><span class="val" id="v-field">0.70</span></label>
+    <label class="setting"><span>Field height</span><input type="range" id="opt-field-h" min="0" max="1.5" step="0.05" value="0.28"><span class="val" id="v-field-h">0.28</span></label>
+    <label class="setting"><span>Colour ramp</span>
+      <select id="opt-ramp">
+        <option value="green">Green (default)</option>
+        <option value="thermal">Thermal</option>
+        <option value="ice">Ice</option>
+        <option value="mono">Monochrome</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-body"></i> Figures</h3>
+    <label class="setting"><span>Show skeleton</span><input type="checkbox" id="opt-skeleton" checked></label>
+    <label class="setting"><span>Body silhouette</span><input type="checkbox" id="opt-body" checked></label>
+    <label class="setting"><span>Show trails</span><input type="checkbox" id="opt-trails" checked></label>
+    <label class="setting"><span>Uncertainty disc</span><input type="checkbox" id="opt-uncertainty" checked></label>
+    <label class="setting"><span>Bone thickness</span><input type="range" id="opt-bone" min="0.005" max="0.05" step="0.002" value="0.022"><span class="val" id="v-bone">0.022</span></label>
+    <label class="setting"><span>Joint size</span><input type="range" id="opt-joint" min="0.02" max="0.1" step="0.005" value="0.038"><span class="val" id="v-joint">0.038</span></label>
+    <label class="setting"><span>Wireframe colour</span><input type="color" id="opt-wire-color" value="#00d878"></label>
+    <label class="setting"><span>Joint colour</span><input type="color" id="opt-joint-color" value="#ff4060"></label>
+    <p class="note">
+      Skeletons are a kinematic model driven by measured position, posture and
+      breathing rate - not per-joint inference. A single-antenna 56-subcarrier
+      stream cannot resolve limbs.
+    </p>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-data"></i> Data</h3>
+    <label class="setting"><span>Scenario</span>
+      <select id="opt-scenario"></select>
+    </label>
+    <button class="btn" id="btn-calibrate"><i class="bx bx-crosshair"></i> RECALIBRATE</button>
+    <p class="note">
+      Leave the space empty during calibration. The baseline learned here
+      defines what "no one is here" means - calibrate with someone in the
+      room and presence detection will never fire again.
+    </p>
+    <button class="btn btn--muted" id="btn-reset-view"><i class="bx bx-reset"></i> RESET VIEW</button>
+  </div>
+
+  <div class="settings-group">
+    <h3><i class="bx bx-plug"></i> Connection</h3>
+    <div class="row"><span class="k">Status</span><span class="v" id="ws-status">-</span></div>
+    <div class="row"><span class="k">Tick</span><span class="v" id="ws-tick">-</span></div>
+    <div class="row"><span class="k">Latency</span><span class="v" id="ws-latency">-</span></div>
+    <div class="row"><span class="k">Nodes</span><span class="v" id="ws-nodes">-</span></div>
+  </div>
+</aside>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="/js/observatory/main.js"></script>
+</body>
+</html>

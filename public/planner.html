@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TriNetra · Floor plan</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="/css/planner.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-left">
+    <a class="btn ghost" href="/" title="Observatory"><i class="bx bx-cube-alt"></i></a>
+    <span class="title">△ FLOOR PLAN</span>
+  </div>
+
+  <div class="bar-mid">
+    <select id="plan-select" title="Open a plan"></select>
+    <span id="plan-badge" class="badge"></span>
+  </div>
+
+  <div class="bar-right">
+    <button class="btn" id="btn-new"><i class="bx bx-plus"></i> NEW</button>
+    <button class="btn" id="btn-duplicate"><i class="bx bx-copy"></i> DUPLICATE</button>
+    <button class="btn" id="btn-delete"><i class="bx bx-trash"></i></button>
+    <button class="btn primary" id="btn-save"><i class="bx bx-save"></i> SAVE &amp; ACTIVATE</button>
+  </div>
+</header>
+
+<main class="workspace">
+
+  <nav class="tools" id="tools">
+    <button class="tool active" data-tool="select" title="Select and move (V)"><i class="bx bx-pointer"></i></button>
+    <button class="tool" data-tool="room" title="Draw a room (R)"><i class="bx bx-square"></i></button>
+    <button class="tool" data-tool="door" title="Add a doorway (D)"><i class="bx bx-log-in"></i></button>
+    <button class="tool" data-tool="node" title="Place a sensing node (N)"><i class="bx bx-broadcast"></i></button>
+    <button class="tool" data-tool="pan" title="Pan (space or middle-drag)"><i class="bx bx-move"></i></button>
+    <div class="tool-sep"></div>
+    <button class="tool" id="btn-fit" title="Fit to view (F)"><i class="bx bx-expand"></i></button>
+  </nav>
+
+  <div class="canvas-wrap">
+    <canvas id="plan-canvas"></canvas>
+    <div class="readonly-note" id="readonly-note" hidden>
+      Built-in plan — <button class="linkish" id="btn-dup-inline">duplicate it</button> to make changes.
+    </div>
+    <div class="statusbar">
+      <span id="st-cursor">—</span>
+      <span id="st-size">—</span>
+      <label class="snap">
+        <input type="checkbox" id="opt-snap" checked> snap
+        <select id="opt-snap-size">
+          <option value="0.25">0.25</option>
+          <option value="0.5" selected>0.5</option>
+          <option value="1">1</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <section class="pane">
+      <h2>Plan</h2>
+      <label class="field">
+        <span>Name</span>
+        <input type="text" id="f-name" maxlength="80">
+      </label>
+      <div class="row">
+        <label class="field">
+          <span>Units</span>
+          <select id="f-units">
+            <option value="ft">feet</option>
+            <option value="m">metres</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Wall height (m)</span>
+          <input type="number" id="f-wall" step="0.05" min="1" max="10">
+        </label>
+      </div>
+      <dl class="stats" id="plan-stats"></dl>
+    </section>
+
+    <section class="pane" id="pane-props">
+      <h2 id="props-title">Nothing selected</h2>
+      <div id="props-body" class="props-empty">
+        Click a room, doorway or node to edit it. Draw a new room with
+        <b>R</b>, add a doorway with <b>D</b>, place a node with <b>N</b>.
+      </div>
+    </section>
+
+    <section class="pane">
+      <h2>Checks</h2>
+      <div id="issues" class="issues"></div>
+    </section>
+  </aside>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- No three.js here on purpose: the planner is a 2D canvas, and the 3D
+     view of whatever you draw is the observatory. -->
+<script type="module" src="/js/planner/main.js"></script>
+</body>
+</html>

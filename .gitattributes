@@ -1,0 +1,12 @@
+# Normalise to LF in the repository; check out native on Windows.
+* text=auto eol=lf
+
+# Shell scripts and Python must stay LF even on Windows checkouts.
+*.sh   text eol=lf
+*.py   text eol=lf
+
+# Binary
+*.bin  binary
+*.elf  binary
+*.png  binary
+*.jpg  binary

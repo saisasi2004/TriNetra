@@ -1,0 +1,79 @@
+# ── ESP32-C6 overlay ────────────────────────────────────────────────────
+# Applied automatically on top of sdkconfig.defaults when the target is
+# esp32c6 (`idf.py set-target esp32c6`).
+#
+# The C6 is a WiFi 6 part: an HE-LTF CSI frame carries 256 subcarrier bins
+# (242 active) instead of the classic ESP32's 64 bins (56 active). That is
+# ~4x the frequency-domain resolution per frame.
+#
+# IMPORTANT: you only get HE frames if the ACCESS POINT is 802.11ax. On a
+# WiFi 4/5 router the C6 associates as an HT client and delivers exactly the
+# same 56 bins a WROOM-32 does. The firmware handles either — see the PPDU
+# lock in csi_collector.c — but do not expect the 242-tone benefit unless
+# your router is WiFi 6.
+
+# C6 is a single RISC-V core with a 160 MHz ceiling, not 240. This must
+# override the 240 selected in sdkconfig.defaults or the build fails.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=n
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=160
+
+# Console on UART0. This is NOT a preference — on ESP-IDF 5.1.2 it is the
+# only option that compiles for this target.
+#
+# Kconfig gates ESP_CONSOLE_UART_BAUDRATE behind `depends on ESP_CONSOLE_UART`,
+# but components/esp_hw_support/sleep_modes.c uses the macro unconditionally
+# on any SoC with SOC_PM_SUPPORT_TOP_PD, which the C6 has. Select the
+# USB-Serial-JTAG console and the whole build dies on an undeclared symbol
+# in IDF's own source. Upstream fixed this after 5.1.x; until you move to
+# IDF 5.2+, keep the console on UART.
+#
+# Practical consequence for wiring: on an ESP32-C6-DevKitC-1, plug into the
+# port labelled UART (the one behind the bridge chip), not the one labelled
+# USB. provision.py talks to whichever port the console is on.
+#
+# If your board is a C6 "Super Mini" or similar with ONLY a native USB port
+# and no bridge chip, this build will flash but you will get no console —
+# that board needs IDF 5.2+, or an external USB-UART adapter on GPIO16 (TX)
+# and GPIO17 (RX).
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+
+# 4 MB is the safe floor: partitions.csv ends at exactly 0x400000, and every
+# C6 module has at least this much. Boards with 8 MB will simply leave the
+# upper half unused — harmless. Do NOT raise this to 8 MB unless you are
+# certain of the part, because flashing a 4 MB chip with an 8 MB config
+# fails outright.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# An HE CSI frame is 28 + 2*242 = 512 bytes on the wire, still one datagram,
+# but four times the classic payload at the same frame rate. Give the TX
+# path room so stream_sender never blocks the sensing task.
+CONFIG_LWIP_UDP_RECVMBOX_SIZE=32
+
+# The CSI queue holds 8 frames of tn_csi_frame_t. At 242 subcarriers that
+# struct is ~2.6 KB, so the queue alone is ~21 KB — fine in the C6's 512 KB
+# of SRAM, but it is the single largest allocation in the firmware.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# ── Latency ─────────────────────────────────────────────────────────────
+#
+# A 1 ms scheduler tick instead of the 10 ms default.
+#
+# The tick is the quantum for every vTaskDelay and every queue timeout in
+# the system, so at 100 Hz the smallest pause anything can take is 10 ms.
+# The sensing loop yields once per burst of frames, and at the default tick
+# that yield alone put a 10 ms floor under the capture-to-UDP path and
+# capped the loop at 100 iterations per second — below what a C6 can
+# actually capture. At 1000 Hz the same yield costs 1 ms.
+#
+# The cost is more timer interrupts. On a 160 MHz core running one sensing
+# task this is not measurable; on a battery deployment it would matter,
+# because a 1 ms tick prevents long automatic light-sleep windows.
+CONFIG_FREERTOS_HZ=1000
+
+# Run the TCP/IP task above the sensing task (priority 5) so a queued
+# datagram is handed to the driver promptly rather than waiting for the
+# sensing loop to block. The CSI mailbox is sized above.
+CONFIG_LWIP_TCPIP_TASK_PRIO=18

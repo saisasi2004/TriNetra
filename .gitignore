@@ -1,0 +1,46 @@
+node_modules/
+*.log
+
+# ── ESP-IDF build output ────────────────────────────────────────────────
+# Note the glob: `build/` alone does NOT match `build-c6/`, and the C6 tree
+# is ~170 MB of object files. Match any build directory, however suffixed.
+firmware/**/build/
+firmware/**/build-*/
+firmware/**/managed_components/
+firmware/**/dependencies.lock
+*.bin
+*.elf
+*.map
+
+# ── Credentials ─────────────────────────────────────────────────────────
+# sdkconfig is GENERATED from sdkconfig.defaults + Kconfig, and if you set a
+# WiFi password locally it lands here in plaintext. It is regenerable, so
+# there is no reason to track it and every reason not to.
+firmware/**/sdkconfig
+firmware/**/sdkconfig.old
+firmware/**/sdkconfig.defaults.local
+
+.env
+.env.*
+!example.env
+
+# ── Personal data ───────────────────────────────────────────────────────
+# Recordings hold occupancy patterns and vital signs for real people — when
+# they are home, when they sleep, when they leave. That is personal data
+# whether or not a camera was involved. Never commit it.
+data/recordings/
+
+# Saved floor plans are a map of someone's home — same category of personal
+# data as a recording, and for the same reason not something to commit.
+data/plans/
+*.jsonl
+
+# ── Editor / OS ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Personal bring-up runbook — contains a specific LAN address, COM port and
+# room layout. Useful locally, meaningless (and slightly leaky) in public.
+firmware/**/instructions.md

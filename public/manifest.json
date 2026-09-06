@@ -1,0 +1,25 @@
+{
+  "name": "TriNetra — WiFi Sensing",
+  "short_name": "TriNetra",
+  "description": "Presence, vital signs and fall detection from ordinary WiFi. No cameras, no wearables.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080c14",
+  "theme_color": "#080c14",
+  "categories": ["utilities", "health", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23080c14'/%3E%3Cpath d='M96 44 L142 130 L50 130 Z' fill='none' stroke='%2300d878' stroke-width='9' stroke-linejoin='round'/%3E%3Ccircle cx='96' cy='104' r='13' fill='%2300d878'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23080c14'/%3E%3Cpath d='M256 116 L378 348 L134 348 Z' fill='none' stroke='%2300d878' stroke-width='24' stroke-linejoin='round'/%3E%3Ccircle cx='256' cy='278' r='34' fill='%2300d878'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

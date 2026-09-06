@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080c14">
+  <title>TriNetra Dashboard</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="mark"><i class="bx bx-broadcast"></i></span>TriNetra
+    <small>Sensing Dashboard</small>
+  </div>
+
+  <div class="spacer"></div>
+
+  <span class="pill" id="pill-source"><span class="dot"></span><span id="source-label">connecting</span></span>
+  <span class="pill" id="pill-quality">-</span>
+  <span class="pill" id="pill-latency">- ms</span>
+
+  <button class="btn muted" id="btn-calibrate"><i class="bx bx-crosshair"></i> RECALIBRATE</button>
+  <a class="btn" href="/"><i class="bx bx-cube-alt"></i> OBSERVATORY</a>
+  <a class="btn" href="/planner.html"><i class="bx bx-shape-square"></i> FLOOR PLAN</a>
+</header>
+
+<main>
+
+  <!-- Live summary -->
+  <section class="card wide">
+    <h2><span>Live State</span><span class="badge" id="badge-tick">tick -</span></h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Presence</div>
+        <div class="value dim" id="s-presence">-</div>
+        <div class="sub" id="s-presence-sub"></div>
+      </div>
+      <div class="stat">
+        <div class="label">People</div>
+        <div class="value count" id="s-people">0</div>
+        <div class="sub" id="s-count-method"></div>
+      </div>
+      <div class="stat">
+        <div class="label">Respiration</div>
+        <div class="value br" id="s-br">--<span class="unit">RPM</span></div>
+        <div class="sub" id="s-br-conf"></div>
+      </div>
+      <div class="stat">
+        <div class="label">Heart Rate</div>
+        <div class="value hr" id="s-hr">--<span class="unit">BPM</span></div>
+        <div class="sub" id="s-hr-conf"></div>
+      </div>
+      <div class="stat">
+        <div class="label">Posture</div>
+        <div class="value amber" id="s-posture" style="font-size:20px">-</div>
+        <div class="sub" id="s-motion"></div>
+      </div>
+      <div class="stat">
+        <div class="label">Signal Quality</div>
+        <div class="value" id="s-quality">-<span class="unit">%</span></div>
+        <div class="sub" id="s-verdict"></div>
+      </div>
+      <div class="stat">
+        <div class="label">Nodes Online</div>
+        <div class="value" id="s-nodes">0</div>
+        <div class="sub" id="s-uptime"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vitals chart -->
+  <section class="card span2">
+    <h2><span>Vital Signs — last 5 minutes</span></h2>
+    <canvas class="chart" id="chart-vitals"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--heart)"></i>Heart rate</span>
+      <span><i style="background:var(--blue)"></i>Respiration</span>
+      <span style="color:var(--text-3)">gaps = suppressed, not estimated</span>
+    </div>
+  </section>
+
+  <!-- Field -->
+  <section class="card">
+    <h2><span>Signal Field</span><span class="badge" id="badge-field">-</span></h2>
+    <canvas class="field" id="field-canvas"></canvas>
+    <div class="legend">
+      <span><i class="bx bx-broadcast"></i> node</span><span><i class="bx bx-current-location"></i> person</span>
+      <span style="color:var(--text-3)">discs show position uncertainty</span>
+    </div>
+  </section>
+
+  <!-- Motion chart -->
+  <section class="card span2">
+    <h2><span>Motion Energy — last 5 minutes</span></h2>
+    <canvas class="chart" id="chart-motion"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>Motion energy</span>
+      <span><i style="background:var(--amber)"></i>People</span>
+    </div>
+  </section>
+
+  <!-- Events -->
+  <section class="card">
+    <h2><span>Events</span><span class="badge" id="badge-events">0</span></h2>
+    <div class="events" id="event-log"><div class="empty">No events yet</div></div>
+  </section>
+
+  <!-- Nodes -->
+  <section class="card wide">
+    <h2><span>Sensor Nodes</span><span class="badge" id="badge-nodes">-</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Node</th><th>Status</th><th>Room</th><th>Position (m)</th>
+            <th>RSSI</th><th>Rate</th><th>Subc.</th><th>Presence</th>
+            <th>Motion</th><th>Breath ratio</th><th>Posture</th>
+            <th>Resp.</th><th>Heart</th><th>Quality</th><th>Frames</th>
+          </tr>
+        </thead>
+        <tbody id="node-rows">
+          <tr><td colspan="15" class="empty">Waiting for nodes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tracked people -->
+  <section class="card wide">
+    <h2><span>Tracked People</span><span class="badge" id="badge-people">0</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Position (m)</th><th>Uncertainty</th><th>Quality</th>
+            <th>Posture</th><th>Velocity</th><th>Motion</th><th>Zone</th>
+            <th>Confidence</th><th>Tracked</th>
+          </tr>
+        </thead>
+        <tbody id="person-rows">
+          <tr><td colspan="10" class="empty">Nobody detected</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Semantic states -->
+  <section class="card wide">
+    <h2><span>Semantic States</span><span class="badge" id="badge-states">0 active</span></h2>
+    <div class="states" id="states-grid"></div>
+  </section>
+
+  <!-- Honest limits -->
+  <section class="card wide">
+    <h2><span>What these numbers mean</span></h2>
+    <dl class="limits" id="limits">
+      <dt>Loading...</dt>
+    </dl>
+  </section>
+
+</main>
+
+<footer>TriNetra — WiFi CSI sensing · <span id="foot-info">-</span></footer>
+
+<script type="module" src="/js/dashboard/main.js"></script>
+</body>
+</html>

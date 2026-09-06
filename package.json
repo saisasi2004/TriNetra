@@ -1,0 +1,41 @@
+{
+  "name": "trinetra",
+  "version": "1.0.0",
+  "description": "TriNetra — WiFi CSI spatial sensing. Presence, vital signs, falls and occupancy from ordinary WiFi, with no cameras and no wearables.",
+  "type": "module",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js --simulate",
+    "sim": "node server/index.js --simulate",
+    "live": "node server/index.js --udp-bind 0.0.0.0",
+    "test": "node --test tests/*.test.js",
+    "replay": "node server/tools/replay.js"
+  },
+  "keywords": [
+    "wifi-sensing",
+    "csi",
+    "esp32",
+    "presence-detection",
+    "vital-signs",
+    "fall-detection",
+    "iot"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saisasi2004/TriNetra.git"
+  },
+  "bugs": { "url": "https://github.com/saisasi2004/TriNetra/issues" },
+  "homepage": "https://github.com/saisasi2004/TriNetra#readme",
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  },
+  "optionalDependencies": {
+    "mqtt": "^5.10.1"
+  }
+}
